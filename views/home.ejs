@@ -3,6 +3,7 @@
 <%- include('particles/navigation.ejs') %>
 
 <% if (items.length > 0) { %>
+<div id='content'>
 
 <% for (let i = 0; i < items.length; i++) { %>
 
@@ -20,7 +21,7 @@
     </div>
 
     <% } %>  
-
+</div>
 <div>
 
     <% if (currentPage > 1) { %>
@@ -34,5 +35,7 @@
 </div>
 
 <% } %>
+
+<button id="fetch">Load items</button>
 
 <%- include('particles/footer.ejs') %>
