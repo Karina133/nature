@@ -15,7 +15,7 @@ button.addEventListener('click',() => {
 
             let a = document.createElement('a');
             a.href = '/items';
-            a.innerText ='';
+            a.innerText ='123';
 
             div.appendChild(a);
 
