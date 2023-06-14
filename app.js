@@ -20,6 +20,7 @@ connection.connect((err) => {
     }
 });
 
+app.use(express.json());
 // Путь к директории файлов ресурсов (css, js, images)
 app.use(express.static('public'));
 
@@ -77,8 +78,10 @@ app.get('/', (req, res) => {
     }) 
 })
 
-app.get('/items', (req,res) => {
-    connection.query("SELECT * FROM items", (err, data, fields) => {
+app.post('/items', (req,res) => {
+    let offset = req.body.offset;
+    // console.log(offset);
+    connection.query("SELECT * FROM items lIMIT 4 OFFSET ?",[[offset]], (err, data, fields) => {
         if (err) {
             console.log('err')
         };

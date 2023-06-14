@@ -3,7 +3,7 @@
 <%- include('particles/navigation.ejs') %>
 
 <% if (items.length > 0) { %>
-<div id='content'>
+<div id='content' data-pages="<%= totalPages %>">
 
 <% for (let i = 0; i < items.length; i++) { %>
 
@@ -36,6 +36,9 @@
 
 <% } %>
 
-<button id="fetch">Load items</button>
+<% if (currentPage < totalPages) { %>
+<button type="hidden" id="fetch">Load items</button>
+<% } %>
+
 
 <%- include('particles/footer.ejs') %>
