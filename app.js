@@ -108,8 +108,8 @@ app.get('/add', isAuth, (req, res) => {
 
 app.post('/store', isAuth, (req, res) => {
     connection.query(
-        "INSERT INTO items (title, image) VALUES (?, ?)",
-        [[req.body.title], [req.body.image]],
+        "INSERT INTO items (title, image, cat_id) VALUES (?, ?, ?)",
+        [[req.body.title], [req.body.image], [req.body.cat_id]],
         (err, data, fields) => {
             if (err) {
                 console.log(err);
@@ -132,8 +132,9 @@ app.post('/delete', (req, res) => {
 })
 
 app.post('/update', (req, res) => {
+    
     connection.query(
-        "UPDATE items SET title=?, image=? WHERE id=?", [[req.body.title],[req.body.image],[req.body.id]], (err, data, fields) => {
+        "UPDATE items SET title=?, image=?, cat_id=? WHERE id=?", [[req.body.title],[req.body.image],[req.body.cat_id],[req.body.id]], (err, data, fields) => {
             if (err) {
                 console.log(err);
             }
@@ -146,6 +147,8 @@ app.get('/auth', (req,res) => {
     res.render('auth');
 
 });
+
+
 
 app.post('/authh', (req, res) => {
     connection.query(
@@ -165,3 +168,48 @@ app.post('/authh', (req, res) => {
         }
     );
 })
+
+app.get('/cat', (req,res) => {
+    res.render('cat');
+
+});
+
+app.post('/cat', (req, res) => {
+    connection.query(
+        "INSERT INTO categories (title,description) VALUES (?, ?)",
+        [[req.body.title], [req.body.description]],
+        (err, data, fields) => {
+            if (err) {
+                console.log(err);
+            }
+            res.redirect('/');
+        }
+    );
+})
+
+
+app.get('/categories', (req, res) => {
+    connection.query("SELECT * FROM categories",
+        (err, data, fields) => {
+            if (err) {
+                console.log(err);
+            }
+
+            res.render('categories', {
+                categories: data,
+            })
+        }
+    );
+})
+
+app.get('/category-items/:id', (req, res) => {
+    connection.query("SELECT * FROM items WHERE cat_id=?", [[req.params.id]], (err, data, fields) => {
+        if (err) {
+            console.log(err);   
+        }
+
+        res.render('category-items', {
+            items: data
+        });
+    });
+});

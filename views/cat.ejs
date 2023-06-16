@@ -1,0 +1,18 @@
+<%- include('particles/header.ejs') %>
+
+<%- include('particles/navigation.ejs') %>
+
+
+
+    <div class="section">
+
+    <form action="/cat" method="post">
+            <input  name='title'type="text" value='Название'>
+            <input  name='description' type="text" value='текст'>
+            <input class="form-button" type="submit" value="Создать">
+    </form>
+
+    </div>
+
+
+<%- include('particles/footer.ejs') %>
