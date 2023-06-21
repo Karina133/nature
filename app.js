@@ -55,33 +55,33 @@ app.get('/', (req, res) => {
     const itemsPerPage = 4;
     let page = parseInt(req.query.page); // localhost?page=4
     if (!page) page = 1;
-    connection.query("SELECT count(id) as count from items",(err,data,fields)=>{
+    connection.query("SELECT count(id) as count from items", (err, data, fields) => {
 
         const count = data[0].count;
         const pages = Math.ceil(count / itemsPerPage);
 
-        if (page>pages) page =pages;
+        if (page > pages) page = pages;
 
         connection.query("SELECT * FROM items LIMIT ? OFFSET ?",
-        [itemsPerPage, itemsPerPage * (page - 1)],
-        (err, data, fields) => {
-            if (err) {
-                console.log(err);
-            }
+            [itemsPerPage, itemsPerPage * (page - 1)],
+            (err, data, fields) => {
+                if (err) {
+                    console.log(err);
+                }
 
-            res.render('home', {
-                'items': data,
-                'currentPage': page,
-                'totalPages':pages,
+                res.render('home', {
+                    'items': data,
+                    'currentPage': page,
+                    'totalPages': pages,
+                });
             });
-        });
-    }) 
+    })
 })
 
-app.post('/items', (req,res) => {
+app.post('/items', (req, res) => {
     let offset = req.body.offset;
     // console.log(offset);
-    connection.query("SELECT * FROM items lIMIT 4 OFFSET ?",[[offset]], (err, data, fields) => {
+    connection.query("SELECT * FROM items lIMIT 4 OFFSET ?", [[offset]], (err, data, fields) => {
         if (err) {
             console.log('err')
         };
@@ -95,12 +95,28 @@ app.get('/items/:id', (req, res) => {
             if (err) {
                 console.log(err);
             }
+            connection.query("SELECT * FROM categories",
+                (err, categoriesData, fields) => {
+                    if (err) {
+                        console.log(err);
+                    }
 
-            res.render('item', {
-                'item': data[0],
-            })
-        });
-})
+                    connection.query("SELECT * FROM categories WHERE id IN (SELECT cat_id FROM items_cat WHERE it_id=?)", [[req.params.id]],
+                        (err, itemCats, fields) => {
+                            if (err) {
+                                console.log(err);
+                            }
+                            console.log(itemCats);
+
+                            res.render('item', {
+                                'categories': categoriesData,
+                                'item': data[0],
+                                'itemCats': itemCats
+                            })
+                        });
+                });
+        })
+});
 
 app.get('/add', isAuth, (req, res) => {
     res.render('add')
@@ -132,9 +148,9 @@ app.post('/delete', (req, res) => {
 })
 
 app.post('/update', (req, res) => {
-    
+
     connection.query(
-        "UPDATE items SET title=?, image=?, cat_id=? WHERE id=?", [[req.body.title],[req.body.image],[req.body.cat_id],[req.body.id]], (err, data, fields) => {
+        "UPDATE items SET title=?, image=? WHERE id=?", [[req.body.title], [req.body.image], [req.body.id]], (err, data, fields) => {
             if (err) {
                 console.log(err);
             }
@@ -143,7 +159,7 @@ app.post('/update', (req, res) => {
     );
 })
 
-app.get('/auth', (req,res) => {
+app.get('/auth', (req, res) => {
     res.render('auth');
 
 });
@@ -160,7 +176,7 @@ app.post('/authh', (req, res) => {
             }
             if (data.length > 0) {
                 console.log('auth');
-                req.session.auth = true;       
+                req.session.auth = true;
             } else {
                 console.log('no auth');
             }
@@ -169,7 +185,7 @@ app.post('/authh', (req, res) => {
     );
 })
 
-app.get('/cat', (req,res) => {
+app.get('/cat', (req, res) => {
     res.render('cat');
 
 });
@@ -202,14 +218,38 @@ app.get('/categories', (req, res) => {
     );
 })
 
-app.get('/category-items/:id', (req, res) => {
-    connection.query("SELECT * FROM items WHERE cat_id=?", [[req.params.id]], (err, data, fields) => {
-        if (err) {
-            console.log(err);   
-        }
+// app.get('/category-items/:id', (req, res) => {
+//     connection.query("SELECT * FROM items WHERE cat_id=?", [[req.params.id]], (err, data, fields) => {
+//         if (err) {
+//             console.log(err);   
+//         }
 
-        res.render('category-items', {
-            items: data
-        });
-    });
-});
+//         res.render('category-items', {
+//             items: data
+//         });
+//     });
+// });
+
+app.post('/catAdd', (req, res) => {
+    connection.query(
+        "SELECT * FROM items_cat WHERE it_id=? AND cat_id=?", [[req.body.it_id], [req.body.cat_id]], (err, data, fields) => {
+            if (err) {
+                console.log(err);
+            }
+
+            console.log(data);
+
+            if (data.length == 0) {
+                connection.query('INSERT INTO items_cat (it_id, cat_id) VALUES (?, ?)', [[req.body.it_id], [req.body.cat_id]], (err, data, fields) => {
+                    if (err) {
+                        console.log(err);
+                    }
+
+                    res.redirect('/');
+                });
+            } else {
+                res.redirect('/');
+            }
+        }
+    );
+})
