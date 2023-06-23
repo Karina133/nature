@@ -34,19 +34,19 @@
         <h6></h6>
     </div>
 
-        <form action="/catAdd" method="post">
-            <input type="hidden" name="it_id" value="<%= item.id %>">
-            <div class="form-group">
-                <select name="cat_id">
-                    <% for (let i=0; i < categories.length; i++) { %>
-                        <option value="<%= categories[i].id %>">
-                            <%= categories[i].title %>
-                        </option>
-                        <% } %>
-                </select>
+    <form action="/catAdd" method="post">
+        <input type="hidden" name="it_id" value="<%= item.id %>">
+        <div class="form-group">
+            <select name="cat_id">
+                <% for (let i=0; i < categories.length; i++) { %>
+                    <option value="<%= categories[i].id %>">
+                        <%= categories[i].title %>
+                    </option>
+                    <% } %>
+            </select>
 
-            </div>
-            <input class="form-button" type='submit' value="Добавить категорию">
-        </form>
+        </div>
+        <input class="form-button" type='submit' value="Добавить категорию">
+    </form>
 
 <%- include('particles/footer.ejs') %>
