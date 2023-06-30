@@ -4,6 +4,9 @@ const path = require('path');
 const session = require('express-session');
 const app = express();
 
+const { PrismaClient } = require('@prisma/client');
+const prisma = new PrismaClient();
+
 require('dotenv').config();
 
 // Соединение с базой данных
@@ -51,32 +54,17 @@ function isAuth(req, res, next) {
 /**
  * Маршруты
  */
-app.get('/', (req, res) => {
-    const itemsPerPage = 4;
-    let page = parseInt(req.query.page); // localhost?page=4
-    if (!page) page = 1;
-    connection.query("SELECT count(id) as count from items", (err, data, fields) => {
+ app.get("/", async (req, res) => {
+    const items = await prisma.item.findMany({
+        include: {
+            location: true,
+        }
+    });
 
-        const count = data[0].count;
-        const pages = Math.ceil(count / itemsPerPage);
-
-        if (page > pages) page = pages;
-
-        connection.query("SELECT * FROM items LIMIT ? OFFSET ?",
-            [itemsPerPage, itemsPerPage * (page - 1)],
-            (err, data, fields) => {
-                if (err) {
-                    console.log(err);
-                }
-
-                res.render('home', {
-                    'items': data,
-                    'currentPage': page,
-                    'totalPages': pages,
-                });
-            });
-    })
-})
+    res.render("home", {
+        items: items,
+    });
+});
 
 app.post('/items', (req, res) => {
     let offset = req.body.offset;
@@ -89,52 +77,56 @@ app.post('/items', (req, res) => {
     });
 });
 
-app.get('/items/:id', (req, res) => {
-    connection.query("SELECT * FROM items WHERE id=?", [req.params.id],
-        (err, data, fields) => {
-            if (err) {
-                console.log(err);
-            }
-            connection.query("SELECT * FROM categories",
-                (err, categoriesData, fields) => {
-                    if (err) {
-                        console.log(err);
-                    }
+app.get("/items/:id", async (req, res) => {
+    const { id } = req.params;
 
-                    connection.query("SELECT * FROM categories WHERE id IN (SELECT cat_id FROM items_cat WHERE it_id=?)", [[req.params.id]],
-                        (err, itemCats, fields) => {
-                            if (err) {
-                                console.log(err);
-                            }
-                            console.log(itemCats);
+    const item = await prisma.item.findFirst({
+        where: {
+            id: Number(id),
+        },
+        include: {
+            location: true,
+            categories: {
+                include: {
+                    category: true,
+                }
+            },
+        }
+    });
 
-                            res.render('item', {
-                                'categories': categoriesData,
-                                'item': data[0],
-                                'itemCats': itemCats
-                            })
-                        });
-                });
-        })
+    res.render("item", {
+        item: (item) ? item : {},
+    });
+});
+
+app.get('/example-m-n', async (req, res) => {
+    await prisma.ItemRelCategory.create({
+        data: {
+            item_id: Number(2),
+            category_id: Number(1),
+        }
+    });
+
+    res.redirect("/");
 });
 
 app.get('/add', isAuth, (req, res) => {
     res.render('add')
 })
 
-app.post('/store', isAuth, (req, res) => {
-    connection.query(
-        "INSERT INTO items (title, image, cat_id) VALUES (?, ?, ?)",
-        [[req.body.title], [req.body.image], [req.body.cat_id]],
-        (err, data, fields) => {
-            if (err) {
-                console.log(err);
-            }
+app.post("/store", async (req, res) => {
+    const { title, image } = req.body;
 
-            res.redirect('/');
+    await prisma.item.create({
+        data: {
+            title,
+            image,
         }
-    );
-})
+    });
+
+    res.redirect("/");
+});
+
 
 app.post('/delete', (req, res) => {
     connection.query(

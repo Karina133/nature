@@ -16,7 +16,9 @@
         "mysql": "^2.18.1",
         "path": "^0.12.7",
         "vinyl-named": "^1.1.0",
-        "webpack-stream": "^6.1.2"
+        "webpack-stream": "^6.1.2",
+        "prisma": "^4.16.1",
+        "@prisma/client": "^4.16.1"
     },
     "devDependencies": {
         "gulp-sass": "^5.1.0",
