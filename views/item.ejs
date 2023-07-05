@@ -6,6 +6,12 @@
         <%= item.title %>
     </h2>
     <img class="section__image" src="/img/<%= item.image %>">
+    <!-- <h3><%= item.location.title %></h3> -->
+    <% for (let i = 0; i < item.categories.length; i++) { %>
+        <h4>
+            <%= item.categories[i].category.title %>
+        </h4>
+    <% } %>
 </div>
 
 <form action="/update" method="post">
@@ -22,5 +28,20 @@
     </div>
 
     <input class="form-button" type="submit" value="Обновить">
+</form>
+
+<form action="/example-m-n" method="post">
+    <input value="<%= item.id %>" type="hidden" name="item_id">
+
+    <div class="form-group">
+        <label class="form-group__label" for="category_id">Category_id</label>
+        <select name="category_id" id="category_id">
+            <% for (let i = 0; i < categories.length; i++) { %>
+                <option value="<%= categories[i].id %>"><%= categories[i].title %></option>
+            <% } %>
+        </select>        
+    </div>
+
+    <input class="form-button" type="submit" value="Привязать">
 </form>
 <%- include('particles/footer.ejs') %>

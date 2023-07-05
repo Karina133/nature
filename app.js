@@ -54,7 +54,7 @@ function isAuth(req, res, next) {
 /**
  * Маршруты
  */
- app.get("/", async (req, res) => {
+app.get("/", async (req, res) => {
     const items = await prisma.item.findMany({
         include: {
             location: true,
@@ -68,7 +68,6 @@ function isAuth(req, res, next) {
 
 app.post('/items', (req, res) => {
     let offset = req.body.offset;
-    // console.log(offset);
     connection.query("SELECT * FROM items lIMIT 4 OFFSET ?", [[offset]], (err, data, fields) => {
         if (err) {
             console.log('err')
@@ -94,16 +93,19 @@ app.get("/items/:id", async (req, res) => {
         }
     });
 
+    const categories = await prisma.category.findMany();
+
     res.render("item", {
         item: (item) ? item : {},
+        categories: categories,
     });
 });
 
-app.get('/example-m-n', async (req, res) => {
+app.post('/example-m-n', async (req, res) => {
     await prisma.ItemRelCategory.create({
         data: {
-            item_id: Number(2),
-            category_id: Number(1),
+            item_id: Number(req.body.item_id),
+            category_id: Number(req.body.category_id),
         }
     });
 
@@ -128,28 +130,37 @@ app.post("/store", async (req, res) => {
 });
 
 
-app.post('/delete', (req, res) => {
-    connection.query(
-        "DELETE FROM items WHERE id=?", [[req.body.id]], (err, data, fields) => {
-            if (err) {
-                console.log(err);
-            }
-            res.redirect('/');
+app.post('/delete', async (req, res) => {
+    const { id } = req.body;
+
+    await prisma.ItemRelCategory.deleteMany({
+        where: {
+            item_id: Number(req.body.id),
         }
-    );
+    });
+
+    await prisma.item.delete({
+        where: {
+            id: Number(id)
+        },        
+    })
+    
+    res.redirect('/');
 })
 
-app.post('/update', (req, res) => {
-
-    connection.query(
-        "UPDATE items SET title=?, image=? WHERE id=?", [[req.body.title], [req.body.image], [req.body.id]], (err, data, fields) => {
-            if (err) {
-                console.log(err);
-            }
-            res.redirect('/');
+app.post('/update', async (req, res) => {
+    const { title, id } = req.body;
+    await prisma.item.update({
+        where: {
+            id: Number(id)
+        },
+        data: {
+            title,
         }
-    );
-})
+    });
+    res.redirect('/');
+});
+
 
 app.get('/auth', (req, res) => {
     res.render('auth');
@@ -196,19 +207,14 @@ app.post('/cat', (req, res) => {
 })
 
 
-app.get('/categories', (req, res) => {
-    connection.query("SELECT * FROM categories",
-        (err, data, fields) => {
-            if (err) {
-                console.log(err);
-            }
+app.get('/categories', async (req, res) => {
+    const item = await prisma.category.findMany()
+    res.render('categories', {
+        item,
+    });
+});
 
-            res.render('categories', {
-                categories: data,
-            })
-        }
-    );
-})
+
 
 // app.get('/category-items/:id', (req, res) => {
 //     connection.query("SELECT * FROM items WHERE cat_id=?", [[req.params.id]], (err, data, fields) => {
